@@ -1,0 +1,5 @@
+config MICRORTPS_CLIENT
+	bool "Enable Micro-RTPS client"
+	default n
+	---help---
+		Enable support for Micro-RTPS Clients
