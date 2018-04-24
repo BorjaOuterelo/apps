@@ -2,45 +2,8 @@
 -include $(TOPDIR)/Make.defs
 include $(APPDIR)/Make.defs
 
-# # LVGL graphic library
-
-# ASRCS =
-# CSRCS =
-# VPATH =
-# DEPPATH = --dep-path .
-
-# # LVGL Libraries
-
-# -include ./lvgl/lv_core/lv_core.mk
-# -include ./lvgl/lv_hal/lv_hal.mk
-# -include ./lvgl/lv_objx/lv_objx.mk
-# -include ./lvgl/lv_misc/lv_fonts/lv_fonts.mk
-# -include ./lvgl/lv_misc/lv_misc.mk
-# -include ./lvgl/lv_themes/lv_themes.mk
-# -include ./lvgl/lv_draw/lv_draw.mk
-
-# # Set up build configuration and environment
-
-# WD := ${shell pwd | sed -e 's/ /\\ /g'}
-
-# CONFIG_GRAPH_LVGL_URL ?= "https://archive.org/download/lvgl4.tar"
-
-# LVGL_VERSION ?= 4
-# LVGL_TARBALL = lvgl$(LVGL_VERSION).tar.gz
-# WGET ?= wget
-
-# LVGL_UNPACKNAME = lvgl
-# UNPACK ?= tar -zxf
-
-# LVGL_UNPACKDIR =  $(WD)/$(LVGL_UNPACKNAME)
-
-# AOBJS = $(ASRCS:.S=$(OBJEXT))
-# COBJS = $(CSRCS:.c=$(OBJEXT))
-
-# SRCS = $(ASRCS) $(CSRCS)
-# OBJS = $(AOBJS) $(COBJS)
-
-MICRO_RTPS_DIR = $(APPDIR)/eprosima/micrortpsclient/micro-RTPS-client
+MICRO_RTPS_DIR = $(APPDIR)/eprosima/micrortpsclient/micrortps-client
+MICRO_RTPS_INSTALL_DIR = $(MICRO_RTPS_DIR)/build/install
 
 ifeq ($(CONFIG_WINDOWS_NATIVE),y)
   BIN = ..\..\libapps$(LIBEXT)
@@ -52,50 +15,45 @@ else
 endif
 endif
 
+EXTRA_LIBPATHS = -L "${shell dirname "/root/apps/eprosima/micrortpsclient/micrortps-client/build/install/lib/libmicrortps-client.a"}"
+EXTRA_LIBS = -l micrortps-client
+
 all: .built
-  .PHONY: context clean depend distclean preconfig
+  .PHONY: clean depend distclean preconfig
   .PRECIOUS: ../../libapps$(LIBEXT)
 
 .built: cmakecompile
-	$(Q) mkdir /root/apps/eprosima/micrortpsclient/micro-RTPS-client/build/extracted; cd /root/apps/eprosima/micrortpsclient/micro-RTPS-client/build/extracted; ar -x ../libmicrortps-client.a; \
-		 ar -x ../external/install/lib/libmicrocdr.a; ar -x ../external/install/lib/libtransport.a
-	$(Q) ar -qc $(BIN) /root/apps/eprosima/micrortpsclient/micro-RTPS-client/build/extracted/*.o
-	$(Q) nm $(BIN)
+	$(call DELDIR, $(MICRO_RTPS_DIR)/build/extracted)
+	$(Q) mkdir $(MICRO_RTPS_DIR)/build/extracted; cd $(MICRO_RTPS_DIR)/build/extracted; arm-none-eabi-ar -x $(MICRO_RTPS_INSTALL_DIR)/lib/libmicrortps-client.a; \
+		 arm-none-eabi-ar -x $(MICRO_RTPS_INSTALL_DIR)/lib/libmicrocdr.a; arm-none-eabi-ar -x $(MICRO_RTPS_INSTALL_DIR)/lib/libtransport.a
+	$(Q) arm-none-eabi-ar -qc $(BIN) $(MICRO_RTPS_DIR)/build/extracted/*.obj
+	#$(Q) arm-none-eabi-ar -qc $(BIN) $(MICRO_RTPS_DIR)/build/extracted/*.o
 	$(Q) touch .built
 
-cmakecompile: /root/apps/eprosima/micrortpsclient/micro-RTPS-client/build/libmicrortps-client.a
+cmakecompile: $(MICRO_RTPS_DIR) $(MICRO_RTPS_INSTALL_DIR)/lib/libmicrortps-client.a
 
-/root/apps/eprosima/micrortpsclient/micro-RTPS-client/build/libmicrortps-client.a:
-	$(Q) mkdir micro-RTPS-client/build
-	$(Q) cd micro-RTPS-client/build; cmake -DTHIRDPARTY=ON ..; make
-# install:
+$(MICRO_RTPS_DIR):
+	@echo "Cloning eProsima/Micro-RTPS"	
+	$(Q) git clone --recursive /root/micrortps-client
 
-# git clone git@github.com:eProsima/micro-RTPS-client.git TODO issues with permissions
-gitclone:
-	@echo "Cloning eProsima/Micro-RTPS"
-	$(call DELDIR, micro-RTPS-client)
-	$(Q) git clone --recursive https://github.com/eProsima/micro-RTPS-client.git
-	
+$(MICRO_RTPS_INSTALL_DIR)/lib/libmicrortps-client.a:
+	$(Q) mkdir micrortps-client/build
+	$(Q) cd micrortps-client/build; cmake -DCMAKE_TOOLCHAIN_FILE=$(MICRO_RTPS_DIR)/../toolchain.cmake -DCHECK_ENDIANNESS=OFF -DTHIRDPARTY=ON -DCMAKE_C_FLAGS="-I. -I/root/nuttx/include -D__PX4_NUTTX -std=c99" -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=$(MICRO_RTPS_INSTALL_DIR) ..; remake -x install
+	#$(Q) cd micrortps-client/build; cmake -DTHIRDPARTY=ON -DCMAKE_C_FLAGS="" -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=$(MICRO_RTPS_INSTALL_DIR) ..; make install
+#
 
-context: gitclone
+context: cmakecompile
 
-.depend: cmakecompile
-# 	$(Q) $(MKDEP) $(DEPPATH) "$(CC)" -- $(CFLAGS) -- $(SRCS) >Make.dep
-# 	$(Q) touch $@
+.depend:
 
 depend: .depend
 
 clean:
-	$(call DELDIR, build)
-	$(call DELFILE, .built)
-	$(call CLEAN)
+	$(call DELDIR, $(MICRO_RTPS_DIR)/build)
+	$(call DELFILE, $(MICRO_RTPS_DIR)/.built)
 
 distclean: clean
-	@echo "CLEAN"
-	@echo "$(MICRO_RTPS_DIR)"
 	$(call DELDIR, $(MICRO_RTPS_DIR))
- 	#$(call DELFILE, Make.dep)
- 	#$(call DELFILE, .depend)
 
 preconfig:
 

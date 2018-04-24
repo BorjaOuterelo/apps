@@ -52,5 +52,8 @@ MAINSRC = hello_main.c
 
 CONFIG_EXAMPLES_HELLO_PROGNAME ?= hello$(EXEEXT)
 PROGNAME = $(CONFIG_EXAMPLES_HELLO_PROGNAME)
+MICRORTPSCLIENTDIR=$(APPDIR)/eprosima/micrortpsclient/micrortps-client/build/install/include/
+CFLAGS   += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" "$(MICRORTPSCLIENTDIR)"}
+CXXFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" "$(MICRORTPSCLIENTDIR)"}
 
 include $(APPDIR)/Application.mk

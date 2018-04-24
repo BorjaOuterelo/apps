@@ -6,6 +6,7 @@
 config EXAMPLES_HELLO
 	bool "\"Hello, World!\" example"
 	default n
+	depends on MICRORTPS_CLIENT
 	---help---
 		Enable the \"Hello, World!\" example
 
