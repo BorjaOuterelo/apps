@@ -38,7 +38,7 @@ $(MICRO_RTPS_DIR):
 
 $(MICRO_RTPS_INSTALL_DIR)/lib/libmicrortps_client.a:
 	$(Q) mkdir micro-RTPS-client/build
-	$(Q) cd micro-RTPS-client/build; cmake -DCMAKE_TOOLCHAIN_FILE=$(MICRO_RTPS_DIR)/../toolchain.cmake -DCHECK_ENDIANNESS=OFF -DTHIRDPARTY=ON -DCMAKE_C_FLAGS="-I. -I/root/nuttx/include -D__PX4_NUTTX -std=c99" -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=$(MICRO_RTPS_INSTALL_DIR) ..; make -x install
+	$(Q) cd micro-RTPS-client/build; cmake -DCMAKE_TOOLCHAIN_FILE=$(MICRO_RTPS_DIR)/../toolchain.cmake -DCHECK_ENDIANNESS=OFF -DTHIRDPARTY=ON -DCMAKE_C_FLAGS="-I. -I/root/nuttx/include -D__PX4_NUTTX -std=c99" -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=$(MICRO_RTPS_INSTALL_DIR) ..; make install
 	#$(Q) cd micro-RTPS-client/build; cmake -DTHIRDPARTY=ON -DCMAKE_C_FLAGS="" -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=$(MICRO_RTPS_INSTALL_DIR) ..; make install
 #
 
